@@ -53,5 +53,9 @@ Stack now: Neon Postgres + Auth.js v5 (magic link via **SMTP/Nodemailer**, NOT R
 - Fixes during local testing (all committed): login provider id resend→nodemailer; globals.css dark-mode removed; Postgres dates cast to text in actions; SMTP (Nodemailer M365) verified sending; allowlist (allowed_emails) gating send + signin.
 - TODO later: connect GitHub repo to Vercel for auto-deploy; add more committee emails to allowed_emails; Phase 2/3 modules (dashboard, rooming, meals, program). Final whole-branch review still pending. User should revoke the Vercel deploy token + delete stray project-deldf.
 
+## Post-deploy fixes (2026-06-26)
+- Cross-region latency: pinned functions to **sin1** via vercel.json (signin 9.8s→2.4s); +login "Sending…" state; auth route maxDuration 30. Commit 67b9eb7.
+- **GOTCHA — env vars empty on Vercel:** `printf '%s' val | vercel env add NAME production` stored EMPTY values (npx/stdin pipe not consumed) → empty AUTH_SECRET → Auth.js `Configuration` error on every signin (routing worked since it doesn't need the secret). Diagnosed via `vercel env pull` ([0 chars]) + `vercel logs` ([auth][error]). FIX: re-set all 8 via REST API `POST /v10/projects/{id}/env?upsert=true` (HTTP 201) then redeploy. Signin now 302→/api/auth/verify-request (success). For future env sets, use the API or interactive add, NOT piped stdin.
+
 ## Version deviation (accepted)
 create-next-app@latest installed Next.js 16 + React 19 + Tailwind v4 (plan said Next 14). Accepted; noted in plan's version note. Tailwind v4 = no tailwind.config.ts (CSS-based config).
