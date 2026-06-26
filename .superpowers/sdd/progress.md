@@ -37,5 +37,14 @@ Repo remote: git@github.com:AppleKok/Event_Run_Down_System.git
 - middleware.ts -> proxy.ts (Next 16 rename; verified correct).
 - create-next-app added AGENTS.md/CLAUDE.md warning of breaking changes; docs bundled in node_modules/next/dist/docs.
 
+## PIVOT (2026-06-26): Supabase → Neon (user request)
+Plan: ~/.claude/plans/postgresql-neondb-owner-...-tranquil-orbit.md (approved).
+Stack now: Neon Postgres + Auth.js v5 (magic link via **SMTP/Nodemailer**, NOT Resend) + server actions + SWR polling. Vercel deploy.
+- **Wave 1 DONE** (controller): deps swapped (added next-auth@beta, @auth/neon-adapter, @neondatabase/serverless, swr, server-only, nodemailer; removed @supabase/*). `db/migrations/0001_init.sql` (adapter tables + app tables) + `db/seed.sql` + `scripts/migrate.mjs`. **Migration RAN against Neon**: 8 tables, 38 guests. `.env.local` set (DATABASE_URL, AUTH_SECRET, SMTP_* placeholders, EMAIL_FROM, AUTH_TRUST_HOST; gitignored). tsconfig already had @/* alias.
+- **Wave 2 DONE**: commit f6cadc5 (auth.ts/route/types/db/actions, rewired login+layout+guests+transport+guest-form to SWR+server actions, deleted Supabase files) + commit 8124852 (swap Resend→Nodemailer SMTP provider). Build exits 0 (Proxy active), 13/13 tests. Neon adapter WebSocket Pool verified working in Node (POOL OK, users:0 guests:38). channel_binding stripped for both drivers.
+- **BLOCKED on user**: SMTP host/port/user/pass to fill .env.local placeholders → then local magic-link login test → promote admin via SQL (`update users set role='admin' where email='ira@geopeta.com'`).
+- **Pending**: Wave 3 review of the migration diff; Wave 4 deploy to Vercel (push + import + env + AUTH_TRUST_HOST + add Vercel URL).
+- Old Supabase project unused — user can delete it.
+
 ## Version deviation (accepted)
 create-next-app@latest installed Next.js 16 + React 19 + Tailwind v4 (plan said Next 14). Accepted; noted in plan's version note. Tailwind v4 = no tailwind.config.ts (CSS-based config).

@@ -14,7 +14,7 @@ export default function LoginPage() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const result = await signIn('resend', { email, redirect: false, callbackUrl: '/guests' })
+    const result = await signIn('nodemailer', { email, redirect: false, callbackUrl: '/guests' })
     if (result?.error) setError(result.error)
     else setSent(true)
   }
@@ -35,8 +35,8 @@ export default function LoginPage() {
           <>
             <input
               type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full border rounded-lg px-3 py-2 mb-3"
+              placeholder="you@dls.global"
+              className="w-full border rounded-lg px-3 py-2 mb-3 text-slate-900 placeholder:text-slate-400"
             />
             <button className="w-full bg-slate-800 text-white rounded-lg py-2 font-semibold">
               Send magic link

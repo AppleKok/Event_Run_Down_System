@@ -28,12 +28,15 @@ async function requireWrite() {
 
 export async function getGuests(): Promise<GuestRow[]> {
   await requireSession()
-  const rows = await sql`select * from guests order by arrival_date asc nulls last, arrival_time asc nulls last`
+  const rows = await sql`
+    select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time,
+           tshirt_size, food_allergy, transport_status, pic
+    from guests order by arrival_date asc nulls last, arrival_time asc nulls last`
   return rows as GuestRow[]
 }
 export async function getTransportGuests(): Promise<Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time'>[]> {
   await requireSession()
-  const rows = await sql`select id, name, agency, arrival_date, arrival_time from guests`
+  const rows = await sql`select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time from guests`
   return rows as Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time'>[]
 }
 export async function createGuest(input: GuestInput): Promise<GuestRow> {
@@ -42,7 +45,7 @@ export async function createGuest(input: GuestInput): Promise<GuestRow> {
     insert into guests (name, agency, arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic)
     values (${input.name}, ${input.agency ?? null}, ${input.arrival_date ?? null}, ${input.arrival_time || null},
             ${input.tshirt_size || null}, ${input.food_allergy || null}, ${input.transport_status}, ${input.pic || null})
-    returning *`
+    returning id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
   return rows[0] as GuestRow
 }
 export async function updateGuest(id: string, input: GuestInput): Promise<GuestRow> {
@@ -53,7 +56,7 @@ export async function updateGuest(id: string, input: GuestInput): Promise<GuestR
       arrival_time=${input.arrival_time || null}, tshirt_size=${input.tshirt_size || null},
       food_allergy=${input.food_allergy || null}, transport_status=${input.transport_status},
       pic=${input.pic || null}, updated_at=now()
-    where id=${id} returning *`
+    where id=${id} returning id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
   if (!rows[0]) throw new Error('Guest not found')
   return rows[0] as GuestRow
 }
