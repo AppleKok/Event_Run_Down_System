@@ -14,16 +14,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' }, // Credentials provider requires JWT sessions (no email/SMTP involved)
   providers: [
     Credentials({
-      credentials: { email: {}, password: {} },
+      credentials: { username: {}, password: {} },
       async authorize(creds) {
-        const email = String(creds?.email ?? '').trim().toLowerCase()
+        const username = String(creds?.username ?? '').trim().toLowerCase()
         const password = String(creds?.password ?? '')
-        if (!email || !password) return null
+        if (!username || !password) return null
         const pool = new Pool({ connectionString: neonUrl() })
         try {
           const { rows } = await pool.query(
-            'select id, email, name, role, password_hash from users where lower(email) = lower($1) limit 1',
-            [email],
+            'select id, email, name, role, password_hash from users where lower(username) = lower($1) limit 1',
+            [username],
           )
           const u = rows[0]
           if (!u || !u.password_hash) return null // only seeded accounts can sign in (the allowlist)
