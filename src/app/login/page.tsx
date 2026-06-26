@@ -6,6 +6,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [authError] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return new URLSearchParams(window.location.search).get('error') === 'auth'
+  })
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault()
@@ -24,6 +28,11 @@ export default function LoginPage() {
       <form onSubmit={signIn} className="bg-white border rounded-2xl p-8 w-full max-w-sm shadow">
         <h1 className="text-xl font-bold text-slate-800">Event Run-Down</h1>
         <p className="text-sm text-slate-500 mb-5">Sign in with your email</p>
+        {authError && (
+          <p className="text-red-600 text-sm mb-4">
+            That sign-in link was invalid or expired — please request a new one.
+          </p>
+        )}
         {sent ? (
           <p className="text-emerald-700 text-sm">Check your email for the sign-in link.</p>
         ) : (

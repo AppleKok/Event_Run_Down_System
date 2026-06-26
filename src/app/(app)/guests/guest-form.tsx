@@ -16,15 +16,22 @@ const EMPTY: GuestRow = {
 export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () => void }) {
   const [row, setRow] = useState<GuestRow>(initial ?? EMPTY)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const set = (k: keyof GuestRow) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setRow({ ...row, [k]: e.target.value })
 
   async function save() {
     setSaving(true)
+    setError('')
     const supabase = createClient()
     const payload = { ...row, arrival_time: row.arrival_time || null }
-    if (row.id) await supabase.from('guests').update(payload).eq('id', row.id)
-    else await supabase.from('guests').insert(payload)
+    if (row.id) {
+      const { error } = await supabase.from('guests').update(payload).eq('id', row.id)
+      if (error) { setError(error.message); setSaving(false); return }
+    } else {
+      const { error } = await supabase.from('guests').insert(payload)
+      if (error) { setError(error.message); setSaving(false); return }
+    }
     setSaving(false)
     onDone()
   }
@@ -39,6 +46,7 @@ export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () 
       <input className="border rounded px-2 py-1" placeholder="Food allergy" value={row.food_allergy ?? ''} onChange={set('food_allergy')} />
       <input className="border rounded px-2 py-1" placeholder="PIC" value={row.pic ?? ''} onChange={set('pic')} />
       <input className="border rounded px-2 py-1" placeholder="Status" value={row.transport_status} onChange={set('transport_status')} />
+      {error && <p className="col-span-2 text-red-600 text-sm">{error}</p>}
       <div className="col-span-2 flex gap-2">
         <button disabled={saving} onClick={save} className="bg-slate-800 text-white rounded px-4 py-1.5 font-semibold">
           {saving ? 'Saving…' : 'Save'}
