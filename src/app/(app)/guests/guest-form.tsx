@@ -1,20 +1,14 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '../../../lib/supabase/client'
+import { createGuest, updateGuest, type GuestRow } from '@/lib/actions/guests'
 
-export interface GuestRow {
-  id?: string; name: string; agency: string | null; arrival_date: string | null
-  arrival_time: string | null; tshirt_size: string | null; food_allergy: string | null
-  transport_status: string; pic: string | null
-}
-
-const EMPTY: GuestRow = {
+const EMPTY: Omit<GuestRow, 'id'> = {
   name: '', agency: '', arrival_date: '2026-06-30', arrival_time: '',
   tshirt_size: '', food_allergy: '', transport_status: 'Pending', pic: '',
 }
 
 export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () => void }) {
-  const [row, setRow] = useState<GuestRow>(initial ?? EMPTY)
+  const [row, setRow] = useState<GuestRow>(initial ?? { id: '', ...EMPTY })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const set = (k: keyof GuestRow) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -23,17 +17,15 @@ export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () 
   async function save() {
     setSaving(true)
     setError('')
-    const supabase = createClient()
-    const payload = { ...row, arrival_time: row.arrival_time || null }
-    if (row.id) {
-      const { error } = await supabase.from('guests').update(payload).eq('id', row.id)
-      if (error) { setError(error.message); setSaving(false); return }
-    } else {
-      const { error } = await supabase.from('guests').insert(payload)
-      if (error) { setError(error.message); setSaving(false); return }
+    try {
+      if (row.id) await updateGuest(row.id, row)
+      else await createGuest(row)
+      onDone()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
-    onDone()
   }
 
   return (

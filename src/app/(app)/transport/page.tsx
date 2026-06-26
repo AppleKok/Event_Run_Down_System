@@ -1,31 +1,17 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { createClient } from '../../../lib/supabase/client'
-import { suggestTrips } from '../../../lib/transport/engine'
-import { DEFAULT_CONFIG, Guest, SuggestedTrip } from '../../../lib/transport/types'
+import useSWR from 'swr'
+import { getTransportGuests } from '@/lib/actions/guests'
+import { suggestTrips } from '@/lib/transport/engine'
+import { DEFAULT_CONFIG, type Guest, type SuggestedTrip } from '@/lib/transport/types'
 
 export default function TransportPage() {
-  const [trips, setTrips] = useState<SuggestedTrip[]>([])
+  const { data: rawGuests = [] } = useSWR('transport-guests', () => getTransportGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
 
-  async function load() {
-    const supabase = createClient()
-    const { data } = await supabase.from('guests')
-      .select('id, name, agency, arrival_date, arrival_time')
-    const guests: Guest[] = ((data as any[]) ?? []).map((d) => ({
-      id: d.id, name: d.name, agency: d.agency ?? '',
-      arrivalDate: d.arrival_date, arrivalTime: d.arrival_time,
-    }))
-    setTrips(suggestTrips(guests, DEFAULT_CONFIG))
-  }
-
-  useEffect(() => {
-    load()
-    const supabase = createClient()
-    const channel = supabase.channel('transport-guests')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'guests' }, load)
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [])
+  const guests: Guest[] = rawGuests.map((d) => ({
+    id: d.id, name: d.name, agency: d.agency ?? '',
+    arrivalDate: d.arrival_date ?? '', arrivalTime: d.arrival_time,
+  }))
+  const trips = suggestTrips(guests, DEFAULT_CONFIG)
 
   const byDate = trips.reduce<Record<string, SuggestedTrip[]>>((acc, t) => {
     (acc[t.date] ??= []).push(t); return acc

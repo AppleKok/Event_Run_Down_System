@@ -1,29 +1,14 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { createClient } from '../../../lib/supabase/client'
-import { StatusBadge } from '../../../components/status-badge'
-import { GuestForm, GuestRow } from './guest-form'
+import useSWR from 'swr'
+import { useState } from 'react'
+import { getGuests, type GuestRow } from '@/lib/actions/guests'
+import { StatusBadge } from '@/components/status-badge'
+import { GuestForm } from './guest-form'
 
 export default function GuestsPage() {
-  const [guests, setGuests] = useState<GuestRow[]>([])
+  const { data: guests = [], mutate } = useSWR('guests', () => getGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
   const [editing, setEditing] = useState<GuestRow | null>(null)
   const [adding, setAdding] = useState(false)
-
-  async function load() {
-    const supabase = createClient()
-    const { data } = await supabase.from('guests').select('*')
-      .order('arrival_date').order('arrival_time')
-    setGuests((data as GuestRow[]) ?? [])
-  }
-
-  useEffect(() => {
-    load()
-    const supabase = createClient()
-    const channel = supabase.channel('guests-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'guests' }, load)
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [])
 
   return (
     <div>
@@ -31,8 +16,8 @@ export default function GuestsPage() {
         <h1 className="text-2xl font-bold text-slate-800">Guests <span className="text-slate-400 text-base">({guests.length})</span></h1>
         <button onClick={() => { setAdding(true); setEditing(null) }} className="bg-slate-800 text-white rounded-lg px-4 py-2 font-semibold">+ Add guest</button>
       </div>
-      {adding && <GuestForm onDone={() => { setAdding(false); load() }} />}
-      {editing && <GuestForm initial={editing} onDone={() => { setEditing(null); load() }} />}
+      {adding && <GuestForm onDone={() => { setAdding(false); mutate() }} />}
+      {editing && <GuestForm initial={editing} onDone={() => { setEditing(null); mutate() }} />}
       <table className="w-full bg-white border rounded-xl overflow-hidden text-sm">
         <thead className="bg-slate-800 text-white text-left">
           <tr><th className="p-2">Name</th><th className="p-2">Agency</th><th className="p-2">Arrival</th><th className="p-2">Size</th><th className="p-2">Status</th><th className="p-2"></th></tr>

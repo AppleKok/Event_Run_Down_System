@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '../../lib/supabase/client'
+import { signIn } from 'next-auth/react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,21 +11,17 @@ export default function LoginPage() {
     return new URLSearchParams(window.location.search).get('error') === 'auth'
   })
 
-  async function signIn(e: React.FormEvent) {
+  async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    })
-    if (error) setError(error.message)
+    const result = await signIn('resend', { email, redirect: false, callbackUrl: '/guests' })
+    if (result?.error) setError(result.error)
     else setSent(true)
   }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-      <form onSubmit={signIn} className="bg-white border rounded-2xl p-8 w-full max-w-sm shadow">
+      <form onSubmit={handleSignIn} className="bg-white border rounded-2xl p-8 w-full max-w-sm shadow">
         <h1 className="text-xl font-bold text-slate-800">Event Run-Down</h1>
         <p className="text-sm text-slate-500 mb-5">Sign in with your email</p>
         {authError && (
