@@ -46,5 +46,12 @@ Stack now: Neon Postgres + Auth.js v5 (magic link via **SMTP/Nodemailer**, NOT R
 - **Pending**: Wave 3 review of the migration diff; Wave 4 deploy to Vercel (push + import + env + AUTH_TRUST_HOST + add Vercel URL).
 - Old Supabase project unused — user can delete it.
 
+## DEPLOYED (2026-06-26) ✅ Phase 1 LIVE
+- Vercel project: event-rundown (team dls-123, prj_uwucRvhoDFbrtpdo97gMrufelznd). Deployed via CLI (GitHub auto-connect failed; deploys are manual `vercel deploy --prod` for now).
+- **Live URL: https://event-rundown-seven.vercel.app** (alias). All 8 env vars set in Vercel prod. Build 30s, routing + auth + providers verified live.
+- Same Neon DB for local + prod (38 guests, allowlist apple.kok@dls.global=admin).
+- Fixes during local testing (all committed): login provider id resend→nodemailer; globals.css dark-mode removed; Postgres dates cast to text in actions; SMTP (Nodemailer M365) verified sending; allowlist (allowed_emails) gating send + signin.
+- TODO later: connect GitHub repo to Vercel for auto-deploy; add more committee emails to allowed_emails; Phase 2/3 modules (dashboard, rooming, meals, program). Final whole-branch review still pending. User should revoke the Vercel deploy token + delete stray project-deldf.
+
 ## Version deviation (accepted)
 create-next-app@latest installed Next.js 16 + React 19 + Tailwind v4 (plan said Next 14). Accepted; noted in plan's version note. Tailwind v4 = no tailwind.config.ts (CSS-based config).

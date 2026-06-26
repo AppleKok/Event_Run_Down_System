@@ -6,6 +6,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [sending, setSending] = useState(false)
   const [authError] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return new URLSearchParams(window.location.search).get('error') === 'auth'
@@ -14,9 +15,16 @@ export default function LoginPage() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    const result = await signIn('nodemailer', { email, redirect: false, callbackUrl: '/guests' })
-    if (result?.error) setError(result.error)
-    else setSent(true)
+    setSending(true)
+    try {
+      const result = await signIn('nodemailer', { email, redirect: false, callbackUrl: '/guests' })
+      if (result?.error) setError(result.error)
+      else setSent(true)
+    } catch {
+      setError('Could not send the link — please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -38,8 +46,8 @@ export default function LoginPage() {
               placeholder="you@dls.global"
               className="w-full border rounded-lg px-3 py-2 mb-3 text-slate-900 placeholder:text-slate-400"
             />
-            <button className="w-full bg-slate-800 text-white rounded-lg py-2 font-semibold">
-              Send magic link
+            <button disabled={sending} className="w-full bg-slate-800 text-white rounded-lg py-2 font-semibold disabled:opacity-60">
+              {sending ? 'Sending…' : 'Send magic link'}
             </button>
             {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
           </>
