@@ -5,6 +5,18 @@ import { getGuests, type GuestRow } from '@/lib/actions/guests'
 import { StatusBadge } from '@/components/status-badge'
 import { GuestForm } from './guest-form'
 
+// Display-only short form for the PBT column (full name stays in the database).
+function shortAgency(agency: string | null): string {
+  if (!agency) return '—'
+  const s = agency
+    .replace(/^Majlis Perbandaran Langkawi Bandaraya Pelancongan$/i, 'MP Langkawi')
+    .replace(/^Majlis Perbandaran /i, 'MP ')
+    .replace(/^Majlis Daerah /i, 'MD ')
+    .replace(/^Majlis Bandaraya /i, 'MB ')
+    .replace(/^PBT Taman Perindustrian /i, 'PBT ')
+  return s
+}
+
 export default function GuestsPage() {
   const { data: guests = [], mutate } = useSWR('guests', () => getGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
   const [editing, setEditing] = useState<GuestRow | null>(null)
@@ -43,7 +55,7 @@ export default function GuestsPage() {
               return (
                 <tr key={g.id} className="border-t">
                   <td className="p-2 text-slate-400">{i + 1}</td>
-                  <td className="p-2 text-slate-500">{g.agency ?? '—'}</td>
+                  <td className="p-2 text-slate-500" title={g.agency ?? ''}>{shortAgency(g.agency)}</td>
                   <td className="p-2 font-medium">{g.name}</td>
                   <td className={`p-2 font-semibold tabular-nums ${g.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{g.room_no ?? '—'}</td>
                   <td className="p-2">{g.arrival_date ?? '—'}</td>
