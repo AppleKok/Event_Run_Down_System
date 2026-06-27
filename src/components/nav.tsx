@@ -3,6 +3,7 @@ import Link from 'next/link'
 export function Nav({ email, role }: { email: string; role: string }) {
   const items = [
     { href: '/guests', label: 'Guests' },
+    { href: '/participants', label: 'Maklumat Peserta' },
     { href: '/transport', label: 'Transport' },
   ]
   return (
