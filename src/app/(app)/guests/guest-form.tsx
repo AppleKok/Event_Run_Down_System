@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { createGuest, updateGuest, type GuestRow } from '@/lib/actions/guests'
 
 const EMPTY: Omit<GuestRow, 'id'> = {
-  name: '', agency: '', ic_no: '', gender: '', room_type: 'Superior Room', bed_type: 'Twin Bed',
+  name: '', agency: '', ic_no: '', gender: '', room_no: '',
   roommate: '', arrival_date: '2026-06-30', arrival_time: '',
   tshirt_size: '', food_allergy: 'Tiada', transport_status: 'Pending', pic: '',
 }
@@ -35,8 +35,7 @@ export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () 
       <input className="border rounded px-2 py-1" placeholder="PBT / Agency" value={row.agency ?? ''} onChange={set('agency')} />
       <input className="border rounded px-2 py-1" placeholder="No. Kad Pengenalan" value={row.ic_no ?? ''} onChange={set('ic_no')} />
       <input className="border rounded px-2 py-1" placeholder="Jantina" value={row.gender ?? ''} onChange={set('gender')} />
-      <input className="border rounded px-2 py-1" placeholder="Room (Jenis Bilik)" value={row.room_type ?? ''} onChange={set('room_type')} />
-      <input className="border rounded px-2 py-1" placeholder="Bed (Jenis Katil)" value={row.bed_type ?? ''} onChange={set('bed_type')} />
+      <input className="border rounded px-2 py-1" placeholder="Room No." value={row.room_no ?? ''} onChange={set('room_no')} />
       <input className="border rounded px-2 py-1" placeholder="Sebilik Dengan (roommate)" value={row.roommate ?? ''} onChange={set('roommate')} />
       <input className="border rounded px-2 py-1" type="date" value={row.arrival_date ?? ''} onChange={set('arrival_date')} />
       <input className="border rounded px-2 py-1" placeholder="Waktu Tiba HH:MM" value={row.arrival_time ?? ''} onChange={set('arrival_time')} />

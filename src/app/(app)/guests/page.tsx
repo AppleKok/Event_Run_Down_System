@@ -25,8 +25,7 @@ export default function GuestsPage() {
               <th className="p-2">No.</th>
               <th className="p-2">PBT</th>
               <th className="p-2">Nama Penuh</th>
-              <th className="p-2">Room</th>
-              <th className="p-2">Bed</th>
+              <th className="p-2">Room No.</th>
               <th className="p-2">Tarikh Tiba</th>
               <th className="p-2">Waktu Tiba</th>
               <th className="p-2">No. Kad Pengenalan</th>
@@ -46,8 +45,7 @@ export default function GuestsPage() {
                   <td className="p-2 text-slate-400">{i + 1}</td>
                   <td className="p-2 text-slate-500">{g.agency ?? '—'}</td>
                   <td className="p-2 font-medium">{g.name}</td>
-                  <td className="p-2">{g.room_type ?? '—'}</td>
-                  <td className="p-2">{g.bed_type ?? '—'}</td>
+                  <td className={`p-2 font-semibold tabular-nums ${g.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{g.room_no ?? '—'}</td>
                   <td className="p-2">{g.arrival_date ?? '—'}</td>
                   <td className="p-2">{g.arrival_time ?? '—'}</td>
                   <td className="p-2 tabular-nums">{g.ic_no ?? '—'}</td>
