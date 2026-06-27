@@ -60,27 +60,3 @@ export async function updateGuest(id: string, input: GuestInput): Promise<GuestR
   if (!rows[0]) throw new Error('Guest not found')
   return rows[0] as GuestRow
 }
-
-export interface Participant {
-  id: string
-  name: string
-  agency: string | null
-  ic_no: string | null
-  gender: string | null
-  food_allergy: string | null
-  tshirt_size: string | null
-  room_type: string | null
-  bed_type: string | null
-  roommate: string | null
-  arrival_date: string | null
-  arrival_time: string | null
-}
-export async function getParticipants(): Promise<Participant[]> {
-  await requireSession()
-  const rows = await sql`
-    select id, name, agency, ic_no, gender, food_allergy, tshirt_size, room_type, bed_type, roommate,
-           to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time
-    from guests
-    order by agency asc nulls last, arrival_time asc nulls last, name`
-  return rows as Participant[]
-}
