@@ -7,6 +7,11 @@ export interface GuestRow {
   id: string
   name: string
   agency: string | null
+  ic_no: string | null
+  gender: string | null
+  room_type: string | null
+  bed_type: string | null
+  roommate: string | null
   arrival_date: string | null
   arrival_time: string | null
   tshirt_size: string | null
@@ -29,9 +34,10 @@ async function requireWrite() {
 export async function getGuests(): Promise<GuestRow[]> {
   await requireSession()
   const rows = await sql`
-    select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time,
+    select id, name, agency, ic_no, gender, room_type, bed_type, roommate,
+           to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time,
            tshirt_size, food_allergy, transport_status, pic
-    from guests order by arrival_date asc nulls last, arrival_time asc nulls last`
+    from guests order by agency asc nulls last, arrival_time asc nulls last, name`
   return rows as GuestRow[]
 }
 export async function getTransportGuests(): Promise<Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time'>[]> {
@@ -42,21 +48,28 @@ export async function getTransportGuests(): Promise<Pick<GuestRow, 'id' | 'name'
 export async function createGuest(input: GuestInput): Promise<GuestRow> {
   await requireWrite()
   const rows = await sql`
-    insert into guests (name, agency, arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic)
-    values (${input.name}, ${input.agency ?? null}, ${input.arrival_date ?? null}, ${input.arrival_time || null},
+    insert into guests (name, agency, ic_no, gender, room_type, bed_type, roommate,
+                        arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic)
+    values (${input.name}, ${input.agency ?? null}, ${input.ic_no || null}, ${input.gender || null},
+            ${input.room_type || null}, ${input.bed_type || null}, ${input.roommate || null},
+            ${input.arrival_date ?? null}, ${input.arrival_time || null},
             ${input.tshirt_size || null}, ${input.food_allergy || null}, ${input.transport_status}, ${input.pic || null})
-    returning id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
+    returning id, name, agency, ic_no, gender, room_type, bed_type, roommate,
+              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
   return rows[0] as GuestRow
 }
 export async function updateGuest(id: string, input: GuestInput): Promise<GuestRow> {
   await requireWrite()
   const rows = await sql`
     update guests set
-      name=${input.name}, agency=${input.agency ?? null}, arrival_date=${input.arrival_date ?? null},
+      name=${input.name}, agency=${input.agency ?? null}, ic_no=${input.ic_no || null},
+      gender=${input.gender || null}, room_type=${input.room_type || null}, bed_type=${input.bed_type || null},
+      roommate=${input.roommate || null}, arrival_date=${input.arrival_date ?? null},
       arrival_time=${input.arrival_time || null}, tshirt_size=${input.tshirt_size || null},
       food_allergy=${input.food_allergy || null}, transport_status=${input.transport_status},
       pic=${input.pic || null}, updated_at=now()
-    where id=${id} returning id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
+    where id=${id} returning id, name, agency, ic_no, gender, room_type, bed_type, roommate,
+              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
   if (!rows[0]) throw new Error('Guest not found')
   return rows[0] as GuestRow
 }

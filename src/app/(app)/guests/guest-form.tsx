@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { createGuest, updateGuest, type GuestRow } from '@/lib/actions/guests'
 
 const EMPTY: Omit<GuestRow, 'id'> = {
-  name: '', agency: '', arrival_date: '2026-06-30', arrival_time: '',
-  tshirt_size: '', food_allergy: '', transport_status: 'Pending', pic: '',
+  name: '', agency: '', ic_no: '', gender: '', room_type: 'Superior Room', bed_type: 'Twin Bed',
+  roommate: '', arrival_date: '2026-06-30', arrival_time: '',
+  tshirt_size: '', food_allergy: 'Tiada', transport_status: 'Pending', pic: '',
 }
 
 export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () => void }) {
@@ -30,12 +31,17 @@ export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () 
 
   return (
     <div className="bg-white border rounded-xl p-4 grid grid-cols-2 gap-3 mb-4">
-      <input className="border rounded px-2 py-1" placeholder="Name" value={row.name} onChange={set('name')} />
-      <input className="border rounded px-2 py-1" placeholder="Agency" value={row.agency ?? ''} onChange={set('agency')} />
+      <input className="border rounded px-2 py-1" placeholder="Nama Penuh" value={row.name} onChange={set('name')} />
+      <input className="border rounded px-2 py-1" placeholder="PBT / Agency" value={row.agency ?? ''} onChange={set('agency')} />
+      <input className="border rounded px-2 py-1" placeholder="No. Kad Pengenalan" value={row.ic_no ?? ''} onChange={set('ic_no')} />
+      <input className="border rounded px-2 py-1" placeholder="Jantina" value={row.gender ?? ''} onChange={set('gender')} />
+      <input className="border rounded px-2 py-1" placeholder="Room (Jenis Bilik)" value={row.room_type ?? ''} onChange={set('room_type')} />
+      <input className="border rounded px-2 py-1" placeholder="Bed (Jenis Katil)" value={row.bed_type ?? ''} onChange={set('bed_type')} />
+      <input className="border rounded px-2 py-1" placeholder="Sebilik Dengan (roommate)" value={row.roommate ?? ''} onChange={set('roommate')} />
       <input className="border rounded px-2 py-1" type="date" value={row.arrival_date ?? ''} onChange={set('arrival_date')} />
-      <input className="border rounded px-2 py-1" placeholder="Arrival HH:MM" value={row.arrival_time ?? ''} onChange={set('arrival_time')} />
-      <input className="border rounded px-2 py-1" placeholder="T-shirt size" value={row.tshirt_size ?? ''} onChange={set('tshirt_size')} />
-      <input className="border rounded px-2 py-1" placeholder="Food allergy" value={row.food_allergy ?? ''} onChange={set('food_allergy')} />
+      <input className="border rounded px-2 py-1" placeholder="Waktu Tiba HH:MM" value={row.arrival_time ?? ''} onChange={set('arrival_time')} />
+      <input className="border rounded px-2 py-1" placeholder="Size T-Shirt" value={row.tshirt_size ?? ''} onChange={set('tshirt_size')} />
+      <input className="border rounded px-2 py-1" placeholder="Alahan Makanan" value={row.food_allergy ?? ''} onChange={set('food_allergy')} />
       <input className="border rounded px-2 py-1" placeholder="PIC" value={row.pic ?? ''} onChange={set('pic')} />
       <input className="border rounded px-2 py-1" placeholder="Status" value={row.transport_status} onChange={set('transport_status')} />
       {error && <p className="col-span-2 text-red-600 text-sm">{error}</p>}

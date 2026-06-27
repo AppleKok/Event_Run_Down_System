@@ -18,23 +18,50 @@ export default function GuestsPage() {
       </div>
       {adding && <GuestForm onDone={() => { setAdding(false); mutate() }} />}
       {editing && <GuestForm initial={editing} onDone={() => { setEditing(null); mutate() }} />}
-      <table className="w-full bg-white border rounded-xl overflow-hidden text-sm">
-        <thead className="bg-slate-800 text-white text-left">
-          <tr><th className="p-2">Name</th><th className="p-2">Agency</th><th className="p-2">Arrival</th><th className="p-2">Size</th><th className="p-2">Status</th><th className="p-2"></th></tr>
-        </thead>
-        <tbody>
-          {guests.map((g) => (
-            <tr key={g.id} className="border-t">
-              <td className="p-2 font-medium">{g.name}</td>
-              <td className="p-2 text-slate-500">{g.agency}</td>
-              <td className="p-2">{g.arrival_date} {g.arrival_time}</td>
-              <td className="p-2">{g.tshirt_size}</td>
-              <td className="p-2"><StatusBadge status={g.transport_status} /></td>
-              <td className="p-2 text-right"><button onClick={() => { setEditing(g); setAdding(false) }} className="text-slate-500 underline">edit</button></td>
+      <div className="overflow-x-auto bg-white border rounded-xl">
+        <table className="w-full text-sm whitespace-nowrap">
+          <thead className="bg-slate-800 text-white text-left">
+            <tr>
+              <th className="p-2">No.</th>
+              <th className="p-2">PBT</th>
+              <th className="p-2">Nama Penuh</th>
+              <th className="p-2">Room</th>
+              <th className="p-2">Bed</th>
+              <th className="p-2">Tarikh Tiba</th>
+              <th className="p-2">Waktu Tiba</th>
+              <th className="p-2">No. Kad Pengenalan</th>
+              <th className="p-2">Jantina</th>
+              <th className="p-2">Alahan Makanan</th>
+              <th className="p-2">Size</th>
+              <th className="p-2">Status</th>
+              <th className="p-2"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {guests.map((g, i) => {
+              const allergy = g.food_allergy ?? ''
+              const hasAllergy = allergy.trim() !== '' && allergy.trim().toLowerCase() !== 'tiada'
+              return (
+                <tr key={g.id} className="border-t">
+                  <td className="p-2 text-slate-400">{i + 1}</td>
+                  <td className="p-2 text-slate-500">{g.agency ?? '—'}</td>
+                  <td className="p-2 font-medium">{g.name}</td>
+                  <td className="p-2">{g.room_type ?? '—'}</td>
+                  <td className="p-2">{g.bed_type ?? '—'}</td>
+                  <td className="p-2">{g.arrival_date ?? '—'}</td>
+                  <td className="p-2">{g.arrival_time ?? '—'}</td>
+                  <td className="p-2 tabular-nums">{g.ic_no ?? '—'}</td>
+                  <td className="p-2">{g.gender ?? '—'}</td>
+                  <td className={`p-2 ${hasAllergy ? 'text-red-600 font-semibold' : ''}`}>{allergy || '—'}</td>
+                  <td className="p-2">{g.tshirt_size ?? '—'}</td>
+                  <td className="p-2"><StatusBadge status={g.transport_status} /></td>
+                  <td className="p-2 text-right"><button onClick={() => { setEditing(g); setAdding(false) }} className="text-slate-500 underline">edit</button></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
