@@ -37,6 +37,8 @@ export default function ParticipantsPage() {
               <Field label="Jantina" value={p.gender} />
               <Field label="Alahan Makanan" value={p.food_allergy} />
               <Field label="Saiz t-shirt" value={p.tshirt_size} />
+              <Field label="Jenis Bilik" value={p.room_type} />
+              <Field label="Jenis Katil" value={p.bed_type} />
               <Field label="Tarikh Tiba" value={p.arrival_date} />
               <Field label="Waktu Tiba" value={p.arrival_time} />
             </div>
