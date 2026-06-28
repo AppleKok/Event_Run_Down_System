@@ -3,6 +3,8 @@ import useSWR from 'swr'
 import { useState } from 'react'
 import { getGuests, type GuestRow } from '@/lib/actions/guests'
 import { StatusBadge } from '@/components/status-badge'
+import { PageHeader, Card, btnPrimary, btnGhost } from '@/components/ui'
+import { IconPlus, IconEdit } from '@/components/icons'
 import { GuestForm } from './guest-form'
 
 // Display-only short form for the PBT column (full name stays in the database).
@@ -17,6 +19,9 @@ function shortAgency(agency: string | null): string {
   return s
 }
 
+const th = 'px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400'
+const td = 'px-3 py-2.5'
+
 export default function GuestsPage() {
   const { data: guests = [], mutate } = useSWR('guests', () => getGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
   const [editing, setEditing] = useState<GuestRow | null>(null)
@@ -24,28 +29,35 @@ export default function GuestsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-slate-800">Guests <span className="text-slate-400 text-base">({guests.length})</span></h1>
-        <button onClick={() => { setAdding(true); setEditing(null) }} className="bg-slate-800 text-white rounded-lg px-4 py-2 font-semibold">+ Add guest</button>
-      </div>
+      <PageHeader
+        title="Guests"
+        subtitle={`${guests.length} peserta · rooming, arrival & dietary details`}
+        actions={
+          <button onClick={() => { setAdding(true); setEditing(null) }} className={btnPrimary}>
+            <IconPlus className="w-4 h-4" /> Add guest
+          </button>
+        }
+      />
+
       {adding && <GuestForm onDone={() => { setAdding(false); mutate() }} />}
       {editing && <GuestForm initial={editing} onDone={() => { setEditing(null); mutate() }} />}
-      <div className="overflow-x-auto bg-white border rounded-xl">
+
+      <Card className="overflow-x-auto">
         <table className="w-full text-sm whitespace-nowrap">
-          <thead className="bg-slate-800 text-white text-left">
-            <tr>
-              <th className="p-2">No.</th>
-              <th className="p-2">PBT</th>
-              <th className="p-2">Nama Penuh</th>
-              <th className="p-2">Room No.</th>
-              <th className="p-2">Tarikh Tiba</th>
-              <th className="p-2">Waktu Tiba</th>
-              <th className="p-2">No. Kad Pengenalan</th>
-              <th className="p-2">Jantina</th>
-              <th className="p-2">Alahan Makanan</th>
-              <th className="p-2">Size</th>
-              <th className="p-2">Status</th>
-              <th className="p-2"></th>
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/80">
+              <th className={th}>No.</th>
+              <th className={th}>PBT</th>
+              <th className={th}>Nama Penuh</th>
+              <th className={th}>Room No.</th>
+              <th className={th}>Tarikh Tiba</th>
+              <th className={th}>Waktu Tiba</th>
+              <th className={th}>No. Kad Pengenalan</th>
+              <th className={th}>Jantina</th>
+              <th className={th}>Alahan Makanan</th>
+              <th className={th}>Size</th>
+              <th className={th}>Status</th>
+              <th className={th}></th>
             </tr>
           </thead>
           <tbody>
@@ -53,25 +65,27 @@ export default function GuestsPage() {
               const allergy = g.food_allergy ?? ''
               const hasAllergy = allergy.trim() !== '' && allergy.trim().toLowerCase() !== 'tiada'
               return (
-                <tr key={g.id} className="border-t">
-                  <td className="p-2 text-slate-400">{i + 1}</td>
-                  <td className="p-2 text-slate-500" title={g.agency ?? ''}>{shortAgency(g.agency)}</td>
-                  <td className="p-2 font-medium">{g.name}</td>
-                  <td className={`p-2 font-semibold tabular-nums ${g.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{g.room_no ?? '—'}</td>
-                  <td className="p-2">{g.arrival_date ?? '—'}</td>
-                  <td className="p-2">{g.arrival_time ?? '—'}</td>
-                  <td className="p-2 tabular-nums">{g.ic_no ?? '—'}</td>
-                  <td className="p-2">{g.gender ?? '—'}</td>
-                  <td className={`p-2 ${hasAllergy ? 'text-red-600 font-semibold' : ''}`}>{allergy || '—'}</td>
-                  <td className="p-2">{g.tshirt_size ?? '—'}</td>
-                  <td className="p-2"><StatusBadge status={g.transport_status} /></td>
-                  <td className="p-2 text-right"><button onClick={() => { setEditing(g); setAdding(false) }} className="text-slate-500 underline">edit</button></td>
+                <tr key={g.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
+                  <td className={`${td} text-slate-400`}>{i + 1}</td>
+                  <td className={`${td} text-slate-500`} title={g.agency ?? ''}>{shortAgency(g.agency)}</td>
+                  <td className={`${td} font-medium text-slate-900`}>{g.name}</td>
+                  <td className={`${td} font-semibold tabular-nums ${g.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{g.room_no ?? '—'}</td>
+                  <td className={`${td} text-slate-600`}>{g.arrival_date ?? '—'}</td>
+                  <td className={`${td} text-slate-600 tabular-nums`}>{g.arrival_time ?? '—'}</td>
+                  <td className={`${td} tabular-nums text-slate-600`}>{g.ic_no ?? '—'}</td>
+                  <td className={`${td} text-slate-600`}>{g.gender ?? '—'}</td>
+                  <td className={`${td} ${hasAllergy ? 'text-red-600 font-semibold' : 'text-slate-600'}`}>{allergy || '—'}</td>
+                  <td className={`${td} text-slate-600`}>{g.tshirt_size ?? '—'}</td>
+                  <td className={td}><StatusBadge status={g.transport_status} /></td>
+                  <td className={`${td} text-right no-print`}>
+                    <button onClick={() => { setEditing(g); setAdding(false) }} className={btnGhost} title="Edit"><IconEdit className="w-4 h-4" /></button>
+                  </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
   )
 }
