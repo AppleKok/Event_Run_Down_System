@@ -7,6 +7,7 @@ const EMPTY: Omit<GuestRow, 'id'> = {
   name: '', agency: '', ic_no: '', gender: '', room_no: '',
   roommate: '', arrival_date: '2026-06-30', arrival_time: '',
   tshirt_size: '', food_allergy: 'Tiada', transport_status: 'Pending', pic: '',
+  category: 'participant',
 }
 
 export function GuestForm({ initial, onDone }: { initial?: GuestRow; onDone: () => void }) {

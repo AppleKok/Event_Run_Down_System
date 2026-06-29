@@ -38,6 +38,12 @@ async function runFile(label, file) {
 
 async function main() {
   await runFile('Schema', join(__dirname, '../db/migrations/0001_init.sql'))
+  await runFile('Attendance', join(__dirname, '../db/migrations/0004_attendance.sql'))
+  await runFile('Committee', join(__dirname, '../db/migrations/0005_committee.sql'))
+  await runFile('Sessions', join(__dirname, '../db/migrations/0006_sessions.sql'))
+  await runFile('Arrival venue', join(__dirname, '../db/migrations/0007_arrival_venue.sql'))
+  await runFile('Trip status', join(__dirname, '../db/migrations/0008_trip_status.sql'))
+  await runFile('Transport group', join(__dirname, '../db/migrations/0009_transport_group.sql'))
 
   const [{ count }] = await sql`select count(*)::int as count from guests`
   if (count > 0) console.log(`\nSeed skipped — guests already has ${count} rows.`)

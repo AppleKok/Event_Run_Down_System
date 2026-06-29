@@ -140,3 +140,95 @@ export const IconEdit = (p: IconProps) => (
     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
   </Svg>
 )
+
+export const IconAttendance = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 4H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
+    <rect x="9" y="3" width="6" height="3" rx="1" />
+    <path d="m9 13 2 2 4-4" />
+  </Svg>
+)
+
+export const IconRooms = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 21h18" />
+    <path d="M5 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16" />
+    <path d="M16 8h3a2 2 0 0 1 2 2v11" />
+    <path d="M11 8h.01" />
+  </Svg>
+)
+
+export const IconCommittee = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="7" r="3" />
+    <path d="M3 21v-1a6 6 0 0 1 12 0v1" />
+    <path d="M16 3.5a3 3 0 0 1 0 6" />
+    <path d="M21 21v-1a6 6 0 0 0-3-5.2" />
+  </Svg>
+)
+
+export const IconPrinter = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 9V3h12v6" />
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+    <rect x="6" y="14" width="12" height="8" rx="1" />
+  </Svg>
+)
+
+export const IconDownload = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <path d="M7 10l5 5 5-5" />
+    <path d="M12 15V3" />
+  </Svg>
+)
+
+// Arrival — arrow landing onto the ground line.
+export const IconArrival = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3v12" />
+    <path d="m7 10 5 5 5-5" />
+    <path d="M5 21h14" />
+  </Svg>
+)
+
+// Departure — arrow lifting off the ground line (sent to the jetty).
+export const IconDeparture = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 21V9" />
+    <path d="m7 14 5-5 5 5" />
+    <path d="M5 3h14" />
+  </Svg>
+)
+
+// Check — simple tick.
+export const IconCheck = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m20 6-11 11-5-5" />
+  </Svg>
+)
+
+// Undo — counter-clockwise arrow.
+export const IconUndo = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 14 4 9l5-5" />
+    <path d="M4 9h11a5 5 0 0 1 0 10h-1" />
+  </Svg>
+)
+
+// Hamburger menu — mobile nav toggle.
+export const IconMenu = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 6h16" />
+    <path d="M4 12h16" />
+    <path d="M4 18h16" />
+  </Svg>
+)
+
+// Close (X) — dismiss the mobile drawer.
+export const IconClose = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </Svg>
+)

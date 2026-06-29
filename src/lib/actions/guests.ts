@@ -17,8 +17,9 @@ export interface GuestRow {
   food_allergy: string | null
   transport_status: string
   pic: string | null
+  category: string
 }
-export type GuestInput = Omit<GuestRow, 'id'>
+export type GuestInput = Omit<GuestRow, 'id' | 'category'>
 
 async function requireSession() {
   const session = await auth()
@@ -35,14 +36,20 @@ export async function getGuests(): Promise<GuestRow[]> {
   const rows = await sql`
     select id, name, agency, ic_no, gender, room_no, roommate,
            to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time,
-           tshirt_size, food_allergy, transport_status, pic
+           tshirt_size, food_allergy, transport_status, pic, category
     from guests order by agency asc nulls last, arrival_time asc nulls last, name`
   return rows as GuestRow[]
 }
-export async function getTransportGuests(): Promise<Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time'>[]> {
+// checked_in = arrival check-in done (synced from the Attendance page) → drives the blue
+// "passenger present" highlight on the Transport page.
+export type TransportGuestRow = Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time' | 'category'> & { checked_in: boolean; arrival_venue: string; transport_group: string | null }
+export async function getTransportGuests(): Promise<TransportGuestRow[]> {
   await requireSession()
-  const rows = await sql`select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time from guests`
-  return rows as Pick<GuestRow, 'id' | 'name' | 'agency' | 'arrival_date' | 'arrival_time'>[]
+  const rows = await sql`
+    select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time,
+           checked_in_at is not null as checked_in, arrival_venue, transport_group, category
+    from guests`
+  return rows as TransportGuestRow[]
 }
 export async function createGuest(input: GuestInput): Promise<GuestRow> {
   await requireWrite()
@@ -54,8 +61,26 @@ export async function createGuest(input: GuestInput): Promise<GuestRow> {
             ${input.arrival_date ?? null}, ${input.arrival_time || null},
             ${input.tshirt_size || null}, ${input.food_allergy || null}, ${input.transport_status}, ${input.pic || null})
     returning id, name, agency, ic_no, gender, room_no, roommate,
-              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
+              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic, category`
   return rows[0] as GuestRow
+}
+// Fast path for the Guests table's inline Room No. editor — avoids round-tripping a full GuestInput.
+// Twin-room rule: a real room number may hold at most 2 guests; a 3rd assignment is rejected.
+// ("No room" / blank are unlimited — they aren't real rooms.)
+export async function assignRoom(id: string, roomNo: string): Promise<void> {
+  await requireWrite()
+  const room = roomNo.trim()
+  const isRealRoom = room !== '' && room.toLowerCase() !== 'no room'
+  if (isRealRoom) {
+    const [{ n }] = (await sql`
+      select count(*)::int as n from guests
+      where id <> ${id} and lower(btrim(room_no)) = ${room.toLowerCase()}`) as { n: number }[]
+    if (n >= 2) throw new Error(`Room ${room} is full (max 2 pax — twin).`)
+  }
+  const rows = await sql`
+    update guests set room_no=${room || null}, updated_at=now()
+    where id=${id} returning id`
+  if (!rows[0]) throw new Error('Guest not found')
 }
 export async function updateGuest(id: string, input: GuestInput): Promise<GuestRow> {
   await requireWrite()
@@ -68,7 +93,7 @@ export async function updateGuest(id: string, input: GuestInput): Promise<GuestR
       food_allergy=${input.food_allergy || null}, transport_status=${input.transport_status},
       pic=${input.pic || null}, updated_at=now()
     where id=${id} returning id, name, agency, ic_no, gender, room_no, roommate,
-              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic`
+              to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, tshirt_size, food_allergy, transport_status, pic, category`
   if (!rows[0]) throw new Error('Guest not found')
   return rows[0] as GuestRow
 }

@@ -5,25 +5,16 @@ import { getGuests, type GuestRow } from '@/lib/actions/guests'
 import { StatusBadge } from '@/components/status-badge'
 import { PageHeader, Card, btnPrimary, btnGhost } from '@/components/ui'
 import { IconPlus, IconEdit } from '@/components/icons'
+import { RoomCell } from '@/components/room-cell'
 import { GuestForm } from './guest-form'
-
-// Display-only short form for the PBT column (full name stays in the database).
-function shortAgency(agency: string | null): string {
-  if (!agency) return '—'
-  const s = agency
-    .replace(/^Majlis Perbandaran Langkawi Bandaraya Pelancongan$/i, 'MP Langkawi')
-    .replace(/^Majlis Perbandaran /i, 'MP ')
-    .replace(/^Majlis Daerah /i, 'MD ')
-    .replace(/^Majlis Bandaraya /i, 'MB ')
-    .replace(/^PBT Taman Perindustrian /i, 'PBT ')
-  return s
-}
+import { shortAgency } from '@/lib/agency'
 
 const th = 'px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400'
 const td = 'px-3 py-2.5'
 
 export default function GuestsPage() {
-  const { data: guests = [], mutate } = useSWR('guests', () => getGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
+  const { data: all = [], mutate } = useSWR('guests', () => getGuests(), { refreshInterval: 5000, revalidateOnFocus: true })
+  const guests = all.filter((g) => g.category !== 'committee') // committee shown on /committee
   const [editing, setEditing] = useState<GuestRow | null>(null)
   const [adding, setAdding] = useState(false)
 
@@ -69,7 +60,7 @@ export default function GuestsPage() {
                   <td className={`${td} text-slate-400`}>{i + 1}</td>
                   <td className={`${td} text-slate-500`} title={g.agency ?? ''}>{shortAgency(g.agency)}</td>
                   <td className={`${td} font-medium text-slate-900`}>{g.name}</td>
-                  <td className={`${td} font-semibold tabular-nums ${g.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{g.room_no ?? '—'}</td>
+                  <RoomCell guest={g} onSaved={mutate} />
                   <td className={`${td} text-slate-600`}>{g.arrival_date ?? '—'}</td>
                   <td className={`${td} text-slate-600 tabular-nums`}>{g.arrival_time ?? '—'}</td>
                   <td className={`${td} tabular-nums text-slate-600`}>{g.ic_no ?? '—'}</td>

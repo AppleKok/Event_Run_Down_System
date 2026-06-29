@@ -6,9 +6,9 @@ import { DEFAULT_CONFIG, type Guest } from '@/lib/transport/types'
 
 export interface DashboardData {
   daysToEvent: number
-  guests: { total: number; roomsAssigned: number; specialDiets: number; confirmed: number }
+  guests: { total: number; roomsAssigned: number; specialDiets: number; confirmed: number; onSite: number; checkedOut: number }
   arrivalsByDay: { date: string; count: number }[]
-  transport: { trips: number; pax: number }
+  transport: { trips: number; pax: number; completedTrips: number; pickedUp: number }
   tasks: { total: number; open: number; done: number; blocked: number }
   upcoming: { id: string; day: string; start_time: string | null; title: string; location: string | null; pic: string | null }[]
   openTasks: { id: string; title: string; pic: string | null; due_date: string | null; status: string; category: string | null }[]
@@ -31,24 +31,34 @@ export async function getDashboard(): Promise<DashboardData> {
       count(*) filter (
         where food_allergy is not null and btrim(food_allergy) <> '' and lower(btrim(food_allergy)) <> 'tiada'
       )::int as special_diets,
-      count(*) filter (where transport_status = 'Confirmed')::int as confirmed
-    from guests`)[0] as { total: number; rooms_assigned: number; special_diets: number; confirmed: number }
+      count(*) filter (where transport_status = 'Confirmed')::int as confirmed,
+      count(*) filter (where checked_in_at is not null and checked_out_at is null)::int as on_site,
+      count(*) filter (where checked_out_at is not null)::int as checked_out
+    from guests where category <> 'committee'`)[0] as { total: number; rooms_assigned: number; special_diets: number; confirmed: number; on_site: number; checked_out: number }
 
   const arrivals = (await sql`
     select to_char(arrival_date, 'YYYY-MM-DD') as date, count(*)::int as count
-    from guests where arrival_date is not null
+    from guests where arrival_date is not null and category <> 'committee'
     group by arrival_date order by arrival_date`) as { date: string; count: number }[]
 
   // Reuse the pure transport engine to surface trip/pax totals.
   const tg = (await sql`
-    select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time
-    from guests`) as { id: string; name: string; agency: string | null; arrival_date: string | null; arrival_time: string | null }[]
+    select id, name, agency, to_char(arrival_date, 'YYYY-MM-DD') as arrival_date, arrival_time, arrival_venue, transport_group
+    from guests`) as { id: string; name: string; agency: string | null; arrival_date: string | null; arrival_time: string | null; arrival_venue: string; transport_group: string | null }[]
   const guestsForTrips: Guest[] = tg.map((d) => ({
     id: d.id, name: d.name, agency: d.agency ?? '',
-    arrivalDate: d.arrival_date ?? '', arrivalTime: d.arrival_time,
+    arrivalDate: d.arrival_date ?? '', arrivalTime: d.arrival_time, venue: d.arrival_venue, group: d.transport_group,
   }))
   const trips = suggestTrips(guestsForTrips, DEFAULT_CONFIG)
   const pax = trips.reduce((n, t) => n + t.guests.length, 0)
+
+  // Picked-up = pax on trips the committee has marked complete on the Transport page.
+  const completedKeys = new Set(
+    ((await sql`select trip_key from trip_status where completed_at is not null`) as { trip_key: string }[])
+      .map((r) => r.trip_key),
+  )
+  const completedTrips = trips.filter((t) => completedKeys.has(t.key)).length
+  const pickedUp = trips.filter((t) => completedKeys.has(t.key)).reduce((n, t) => n + t.guests.length, 0)
 
   const taskAgg = (await sql`
     select
@@ -79,9 +89,11 @@ export async function getDashboard(): Promise<DashboardData> {
       roomsAssigned: guestAgg.rooms_assigned,
       specialDiets: guestAgg.special_diets,
       confirmed: guestAgg.confirmed,
+      onSite: guestAgg.on_site,
+      checkedOut: guestAgg.checked_out,
     },
     arrivalsByDay: arrivals,
-    transport: { trips: trips.length, pax },
+    transport: { trips: trips.length, pax, completedTrips, pickedUp },
     tasks: taskAgg,
     upcoming,
     openTasks,

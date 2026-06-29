@@ -5,7 +5,7 @@ import { getDashboard, type DashboardData } from '@/lib/actions/dashboard'
 import { Card, Stat, SectionTitle, PageHeader, Chip } from '@/components/ui'
 import { StatusBadge } from '@/components/status-badge'
 import {
-  IconGuests, IconBed, IconAlert, IconTransport, IconTasks, IconClock, IconPin,
+  IconGuests, IconBed, IconAlert, IconTransport, IconTasks, IconClock, IconPin, IconAttendance, IconCheck,
 } from '@/components/icons'
 
 function fmtDay(iso: string): string {
@@ -32,7 +32,7 @@ export default function OverviewPage() {
       />
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-8 gap-3 mb-6">
         <Stat
           accent
           label="Days to event"
@@ -44,15 +44,29 @@ export default function OverviewPage() {
         <Stat
           label="Rooms assigned"
           value={g ? `${g.roomsAssigned}` : '—'}
-          hint={g ? `of ${g.total}` : undefined}
+          hint={g ? `of ${g.total} · ${g.total - g.roomsAssigned} unassigned` : undefined}
           icon={<IconBed className="w-[18px] h-[18px]" />}
+        />
+        <Stat
+          accent
+          label="On site now"
+          value={g?.onSite ?? '—'}
+          hint={g ? `${g.checkedOut} checked out` : undefined}
+          icon={<IconAttendance className="w-[18px] h-[18px]" />}
         />
         <Stat label="Special diets" value={g?.specialDiets ?? '—'} hint="allergy / diet" icon={<IconAlert className="w-[18px] h-[18px]" />} />
         <Stat
           label="Transport trips"
           value={data?.transport.trips ?? '—'}
-          hint={data ? `${data.transport.pax} pax` : undefined}
+          hint={data ? `${data.transport.completedTrips} done · ${data.transport.pax} pax` : undefined}
           icon={<IconTransport className="w-[18px] h-[18px]" />}
+        />
+        <Stat
+          accent
+          label="Picked up"
+          value={data ? `${data.transport.pickedUp}` : '—'}
+          hint={data ? `of ${data.transport.pax} pax` : undefined}
+          icon={<IconCheck className="w-[18px] h-[18px]" />}
         />
         <Stat label="Open tasks" value={data?.tasks.open ?? '—'} hint={data ? `${data.tasks.done} done` : undefined} icon={<IconTasks className="w-[18px] h-[18px]" />} />
       </div>
