@@ -249,9 +249,12 @@ export default function TransportPage() {
               <div className="space-y-3">
                 {dayTrips.map((t) => (
                   <div key={t.key} className="break-inside-avoid border border-slate-400 rounded">
-                    <div className="flex items-center justify-between bg-slate-100 px-2 py-1 text-sm font-bold">
-                      <span>Trip {t.tripNo} · From {t.venue}{t.group ? ` · Group (${t.group})` : ''}</span>
-                      <span>Pickup {t.pickupTime} · {t.guests.length} pax</span>
+                    <div className={`flex items-center justify-between px-2 py-1 text-sm font-bold ${done.has(t.key) ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                      <span>
+                        {done.has(t.key) && <span className="mr-1">☑</span>}
+                        Trip {t.tripNo} · From {t.venue}{t.group ? ` · Group (${t.group})` : ''}
+                      </span>
+                      <span>Pickup {t.pickupTime} · {t.guests.length} pax{done.has(t.key) ? ' · ✓ Completed' : ''}</span>
                     </div>
                     <table className="w-full text-sm">
                       <thead>
@@ -264,7 +267,9 @@ export default function TransportPage() {
                       <tbody>
                         {t.guests.map((g) => (
                           <tr key={g.id} className="border-b border-slate-200 last:border-0">
-                            <td className="px-2 py-1 text-center align-middle"><span className="inline-block w-3.5 h-3.5 border border-slate-500 rounded-sm" /></td>
+                            <td className="px-2 py-1 text-center align-middle">
+                              <span className={`inline-flex items-center justify-center w-3.5 h-3.5 border border-slate-500 rounded-sm text-[10px] leading-none ${done.has(t.key) ? 'bg-slate-800 text-white' : ''}`}>{done.has(t.key) ? '✓' : ''}</span>
+                            </td>
                             <td className="px-2 py-1">{g.name} <span className="text-slate-500">· {shortAgency(g.agency)}</span></td>
                             <td className="px-2 py-1 text-right tabular-nums whitespace-nowrap">{g.arrivalTime}</td>
                           </tr>
@@ -284,15 +289,20 @@ export default function TransportPage() {
               <div className="space-y-3">
                 {sh.trips.map((t) => (
                   <div key={t.key} className="break-inside-avoid border border-slate-400 rounded">
-                    <div className="flex items-center justify-between bg-slate-100 px-2 py-1 text-sm font-bold">
-                      <span>Van {t.vanNo} · Bayview → {sh.destination}</span>
-                      <span>Depart {t.departTime} · arrive {t.arriveTime} · {t.guests.length} pax</span>
+                    <div className={`flex items-center justify-between px-2 py-1 text-sm font-bold ${done.has(t.key) ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                      <span>
+                        {done.has(t.key) && <span className="mr-1">☑</span>}
+                        Van {t.vanNo} · Bayview → {sh.destination}
+                      </span>
+                      <span>Depart {t.departTime} · arrive {t.arriveTime} · {t.guests.length} pax{done.has(t.key) ? ' · ✓ Completed' : ''}</span>
                     </div>
                     <table className="w-full text-sm">
                       <tbody>
                         {t.guests.map((g) => (
                           <tr key={g.id} className="border-b border-slate-200 last:border-0">
-                            <td className="px-2 py-1 text-center align-middle w-7"><span className="inline-block w-3.5 h-3.5 border border-slate-500 rounded-sm" /></td>
+                            <td className="px-2 py-1 text-center align-middle w-7">
+                              <span className={`inline-flex items-center justify-center w-3.5 h-3.5 border border-slate-500 rounded-sm text-[10px] leading-none ${done.has(t.key) ? 'bg-slate-800 text-white' : ''}`}>{done.has(t.key) ? '✓' : ''}</span>
+                            </td>
                             <td className="px-2 py-1">{g.name} <span className="text-slate-500">· {shortAgency(g.agency)}</span></td>
                           </tr>
                         ))}
