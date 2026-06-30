@@ -1,7 +1,7 @@
 'use client'
 import useSWR from 'swr'
 import { useMemo, useState } from 'react'
-import { getSessionRoster, setPresent, setCollected, setShirtSize, SHIRT_SIZES, type SessionGuest } from '@/lib/actions/sessions'
+import { getSessionRoster, setPresent, setCollected, setShirtSize, type SessionGuest } from '@/lib/actions/sessions'
 import { Card, btnSecondary, inputClass } from '@/components/ui'
 import { IconPrinter, IconDownload } from '@/components/icons'
 import { shortAgency } from '@/lib/agency'
@@ -9,6 +9,9 @@ import { downloadCsv } from '@/lib/csv'
 
 const th = 'px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400'
 const td = 'px-3 py-2.5'
+
+// Shirt sizes — matches the convention already used in the Guest list (guests.tshirt_size).
+const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const
 
 // Per-session roster: mark present + tick collected items. Reused by the Attendance
 // tabs and the standalone /attendance/[id] page (SWR key is shared, so no double fetch).
@@ -54,7 +57,7 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
       `${session?.name ?? 'session'}.csv`,
       ['PBT', 'Nama', 'Room No.', ...(showShirt ? ['Shirt size'] : []), 'Present', ...items],
       visible.map((r) => [
-        shortAgency(r.agency), r.name, r.room_no ?? '', ...(showShirt ? [r.shirt_size ?? ''] : []),
+        shortAgency(r.agency), r.name, r.room_no ?? '', ...(showShirt ? [r.tshirt_size ?? ''] : []),
         r.present ? 'Yes' : 'No',
         ...items.map((it) => (r.collected.includes(it) ? 'Yes' : 'No')),
       ]),
@@ -100,14 +103,18 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
                 {showShirt && (
                   <td className={`${td} text-center`}>
                     <select
-                      value={r.shirt_size ?? ''}
+                      value={r.tshirt_size ?? ''}
                       disabled={busy === r.id + ':shirt'}
                       onChange={(e) => changeShirt(r, e.target.value)}
                       title="Shirt size"
-                      className={`border rounded-lg pl-2.5 pr-7 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:opacity-60 transition cursor-pointer ${r.shirt_size ? 'border-slate-200 text-slate-800 font-medium' : 'border-slate-200 text-slate-400'}`}
+                      className={`border rounded-lg pl-2.5 pr-7 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:opacity-60 transition cursor-pointer ${r.tshirt_size ? 'border-slate-200 text-slate-800 font-medium' : 'border-slate-200 text-slate-400'}`}
                     >
                       <option value="">—</option>
                       {SHIRT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {/* Preserve any pre-existing free-text size not in the standard list. */}
+                      {r.tshirt_size && !SHIRT_SIZES.includes(r.tshirt_size as typeof SHIRT_SIZES[number]) && (
+                        <option value={r.tshirt_size}>{r.tshirt_size}</option>
+                      )}
                     </select>
                   </td>
                 )}

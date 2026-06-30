@@ -1,5 +1,5 @@
--- Event Run-Down — per-guest shirt size, recorded at Workshop Registration (Day 2).
--- Shirt size is intrinsic to the guest (one size per person), so it lives on guests
--- and is edited from the session roster. Idempotent.
-
-alter table guests add column if not exists shirt_size text;
+-- Shirt size already exists as guests.tshirt_size (since 0001_init) and is shown in
+-- the Guest list / Committee / Guest form. The Workshop Registration (Day 2) attendance
+-- selector edits that same column, so drop the redundant shirt_size column added in an
+-- earlier iteration. Idempotent.
+alter table guests drop column if exists shirt_size;
