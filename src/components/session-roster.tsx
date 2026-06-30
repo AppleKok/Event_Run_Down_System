@@ -1,7 +1,7 @@
 'use client'
 import useSWR from 'swr'
 import { useMemo, useState } from 'react'
-import { getSessionRoster, setPresent, setCollected, type SessionGuest } from '@/lib/actions/sessions'
+import { getSessionRoster, setPresent, setCollected, setShirtSize, SHIRT_SIZES, type SessionGuest } from '@/lib/actions/sessions'
 import { Card, btnSecondary, inputClass } from '@/components/ui'
 import { IconPrinter, IconDownload } from '@/components/icons'
 import { shortAgency } from '@/lib/agency'
@@ -22,6 +22,8 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
   const session = data?.session
   const roster = useMemo(() => data?.roster ?? [], [data])
   const items = session?.items ?? []
+  // Show the shirt-size selector only for sessions that hand out a Shirt (e.g. Workshop Registration Day 2).
+  const showShirt = items.includes('Shirt')
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -43,13 +45,17 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
     const next = r.collected.includes(item) ? r.collected.filter((x) => x !== item) : [...r.collected, item]
     run(r.id + ':' + item, () => setCollected(sessionId, r.id, next))
   }
+  function changeShirt(r: SessionGuest, size: string) {
+    run(r.id + ':shirt', () => setShirtSize(r.id, size))
+  }
 
   function exportCsv() {
     downloadCsv(
       `${session?.name ?? 'session'}.csv`,
-      ['PBT', 'Nama', 'Room No.', 'Present', ...items],
+      ['PBT', 'Nama', 'Room No.', ...(showShirt ? ['Shirt size'] : []), 'Present', ...items],
       visible.map((r) => [
-        shortAgency(r.agency), r.name, r.room_no ?? '', r.present ? 'Yes' : 'No',
+        shortAgency(r.agency), r.name, r.room_no ?? '', ...(showShirt ? [r.shirt_size ?? ''] : []),
+        r.present ? 'Yes' : 'No',
         ...items.map((it) => (r.collected.includes(it) ? 'Yes' : 'No')),
       ]),
     )
@@ -79,6 +85,7 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
               <th className={th}>PBT</th>
               <th className={th}>Nama Penuh</th>
               <th className={th}>Room No.</th>
+              {showShirt && <th className={`${th} text-center`}>Shirt size</th>}
               <th className={`${th} text-center`}>Present</th>
               {items.map((it) => <th key={it} className={`${th} text-center`}>{it}</th>)}
             </tr>
@@ -90,6 +97,20 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
                 <td className={`${td} text-slate-500`} title={r.agency ?? ''}>{shortAgency(r.agency)}</td>
                 <td className={`${td} font-medium text-slate-900`}>{r.name}</td>
                 <td className={`${td} font-semibold tabular-nums ${r.room_no ? 'text-slate-800' : 'text-slate-300'}`}>{r.room_no ?? '—'}</td>
+                {showShirt && (
+                  <td className={`${td} text-center`}>
+                    <select
+                      value={r.shirt_size ?? ''}
+                      disabled={busy === r.id + ':shirt'}
+                      onChange={(e) => changeShirt(r, e.target.value)}
+                      title="Shirt size"
+                      className={`border rounded-lg pl-2.5 pr-7 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:opacity-60 transition cursor-pointer ${r.shirt_size ? 'border-slate-200 text-slate-800 font-medium' : 'border-slate-200 text-slate-400'}`}
+                    >
+                      <option value="">—</option>
+                      {SHIRT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                )}
                 <td className={`${td} text-center`}>
                   <input type="checkbox" checked={r.present} disabled={busy === r.id + ':p'}
                     onChange={() => togglePresent(r)} className="w-5 h-5 accent-emerald-600 cursor-pointer" />
@@ -103,7 +124,7 @@ export function SessionRoster({ sessionId }: { sessionId: string }) {
               </tr>
             ))}
             {visible.length === 0 && (
-              <tr><td colSpan={5 + items.length} className={`${td} text-center text-slate-400 py-8`}>{data ? 'No one matches.' : 'Loading…'}</td></tr>
+              <tr><td colSpan={5 + items.length + (showShirt ? 1 : 0)} className={`${td} text-center text-slate-400 py-8`}>{data ? 'No one matches.' : 'Loading…'}</td></tr>
             )}
           </tbody>
         </table>

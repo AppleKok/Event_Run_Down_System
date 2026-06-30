@@ -18,10 +18,14 @@ export interface SessionGuest {
   name: string
   agency: string | null
   room_no: string | null
+  shirt_size: string | null
   present: boolean
   collected: string[]
   present_at: string | null
 }
+
+// Allowed shirt sizes (recorded at Workshop Registration Day 2).
+export const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'] as const
 
 async function requireSession() {
   const session = await auth()
@@ -67,9 +71,9 @@ export async function getSessionRoster(sessionId: string): Promise<{ session: Se
   if (!s) throw new Error('Session not found')
 
   const guests = (await sql`
-    select id, name, agency, room_no, category from guests
+    select id, name, agency, room_no, shirt_size, category from guests
     where coalesce(transport_status,'') <> 'Cancelled'
-    order by agency asc nulls last, name asc`) as { id: string; name: string; agency: string | null; room_no: string | null; category: string }[]
+    order by agency asc nulls last, name asc`) as { id: string; name: string; agency: string | null; room_no: string | null; shirt_size: string | null; category: string }[]
   const att = (await sql`
     select guest_id, present, collected, to_char(present_at,'YYYY-MM-DD HH24:MI') as present_at
     from session_attendance where session_id=${sessionId}`) as { guest_id: string; present: boolean; collected: string[]; present_at: string | null }[]
@@ -80,7 +84,7 @@ export async function getSessionRoster(sessionId: string): Promise<{ session: Se
     .map((g) => {
       const a = amap.get(g.id)
       return {
-        id: g.id, name: g.name, agency: g.agency, room_no: g.room_no,
+        id: g.id, name: g.name, agency: g.agency, room_no: g.room_no, shirt_size: g.shirt_size,
         present: a?.present ?? false, collected: a?.collected ?? [], present_at: a?.present_at ?? null,
       }
     })
@@ -111,4 +115,11 @@ export async function setCollected(sessionId: string, guestId: string, items: st
           present = session_attendance.present or ${present},
           present_at = coalesce(session_attendance.present_at, ${present ? new Date() : null}),
           marked_by=${actor(s)}`
+}
+
+// Shirt size is a guest property (one per person), recorded at Workshop Registration Day 2.
+// Editing it here updates the guest everywhere. Empty string clears it.
+export async function setShirtSize(guestId: string, size: string): Promise<void> {
+  await requireWrite()
+  await sql`update guests set shirt_size=${size || null}, updated_at=now() where id=${guestId}`
 }
