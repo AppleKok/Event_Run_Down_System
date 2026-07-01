@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { submitSurvey } from '@/lib/actions/survey'
 import {
   SURVEY_TITLE, SURVEY_SUBTITLE, PARTICIPANT_FIELDS, SURVEY_QUESTIONS, PBT_OTHER, isValidEmail,
-  type SurveyAnswers,
+  type SurveyAnswers, type SurveyQuestion,
 } from '@/lib/survey'
 
 const input =
@@ -16,7 +16,17 @@ export default function SurveyPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [emailError, setEmailError] = useState('')
+  const [showErrors, setShowErrors] = useState(false)
   const [done, setDone] = useState(false)
+
+  // A question is answered if an option is picked, or (for "Lain-lain") the text is filled.
+  function questionAnswered(q: SurveyQuestion): boolean {
+    const v = answers[q.id]
+    const hasOpt = Array.isArray(v) ? v.length > 0 : typeof v === 'string' && v.trim() !== ''
+    if (hasOpt) return true
+    if (q.hasOther) return (others[q.id] ?? '').trim() !== ''
+    return false
+  }
 
   function setSingle(qid: string, value: string) {
     setAnswers((a) => ({ ...a, [qid]: value }))
@@ -40,6 +50,15 @@ export default function SurveyPage() {
       return
     }
     setEmailError('')
+
+    // Every question is mandatory — nothing can be blank.
+    const missing = SURVEY_QUESTIONS.filter((q) => !questionAnswered(q))
+    if (missing.length) {
+      setShowErrors(true)
+      setError(`Sila jawab semua soalan (${missing.length} belum dijawab).`)
+      document.getElementById(missing[0].id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
 
     // If PBT is "Lain-lain", use the typed value as the organisation.
     const organisasi = participant.organisasi === PBT_OTHER
@@ -158,12 +177,14 @@ export default function SurveyPage() {
           <div className="space-y-7">
             {SURVEY_QUESTIONS.map((q, idx) => {
               const selected = answers[q.id]
+              const invalid = showErrors && !questionAnswered(q)
               return (
-                <fieldset key={q.id}>
+                <fieldset key={q.id} id={q.id} className={`scroll-mt-6 ${invalid ? 'rounded-lg -mx-2 px-2 py-2 ring-1 ring-red-300 bg-red-50/40' : ''}`}>
                   <legend className="text-sm font-medium text-slate-800">
-                    {idx + 1}. {q.label}
+                    {idx + 1}. {q.label}<span className="text-red-500"> *</span>
                   </legend>
                   {q.hint && <p className="text-xs text-slate-400 mt-0.5">{q.hint}</p>}
+                  {invalid && <p className="text-xs text-red-600 mt-0.5">Soalan ini wajib dijawab.</p>}
                   <div className="mt-2.5 space-y-2">
                     {q.options.map((opt) => {
                       const checked = q.type === 'single'

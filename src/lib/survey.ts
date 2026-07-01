@@ -48,7 +48,7 @@ export const PARTICIPANT_FIELDS: ParticipantField[] = [
   { id: 'nama', label: 'Nama (nama penuh seperti dalam IC)', required: true, type: 'text' },
   { id: 'emel', label: 'Emel', required: true, type: 'email' },
   { id: 'organisasi', label: 'Nama PBT / Organisasi', required: true, type: 'select', options: PBT_OPTIONS },
-  { id: 'jawatan', label: 'Jawatan / Jabatan', required: false, type: 'text' },
+  { id: 'jawatan', label: 'Jawatan / Jabatan', required: true, type: 'text' },
 ]
 
 // Section B — session feedback.
@@ -140,4 +140,17 @@ export interface SurveyInput {
   organisasi: string
   jawatan: string
   answers: SurveyAnswers
+}
+
+// A question counts as answered if an option is picked (or, for "Lain-lain"
+// questions, the free-text is filled). Used to enforce that nothing is left blank.
+export function isAnswered(q: SurveyQuestion, answers: SurveyAnswers): boolean {
+  const v = answers[q.id]
+  const hasOpt = Array.isArray(v) ? v.length > 0 : typeof v === 'string' && v.trim() !== ''
+  if (hasOpt) return true
+  if (q.hasOther) {
+    const o = answers[`${q.id}_other`]
+    return typeof o === 'string' && o.trim() !== ''
+  }
+  return false
 }

@@ -1,7 +1,7 @@
 'use server'
 import { sql } from '@/lib/db'
 import { auth } from '@/auth'
-import { isValidEmail, type SurveyInput, type SurveyAnswers } from '@/lib/survey'
+import { isValidEmail, isAnswered, SURVEY_QUESTIONS, type SurveyInput, type SurveyAnswers } from '@/lib/survey'
 
 export interface SurveyResponseRow {
   id: string
@@ -19,10 +19,12 @@ export async function submitSurvey(input: SurveyInput): Promise<void> {
   const nama = (input?.nama ?? '').trim()
   const emel = (input?.emel ?? '').trim()
   const organisasi = (input?.organisasi ?? '').trim()
+  const jawatan = (input?.jawatan ?? '').trim()
   if (!nama) throw new Error('Sila isi nama anda.')
   if (!emel) throw new Error('Sila isi emel anda.')
   if (!isValidEmail(emel)) throw new Error('Format emel tidak sah.')
   if (!organisasi) throw new Error('Sila pilih PBT / Organisasi anda.')
+  if (!jawatan) throw new Error('Sila isi jawatan / jabatan anda.')
 
   // Only persist the two answer shapes we expect (string | string[] of strings).
   const clean: SurveyAnswers = {}
@@ -31,10 +33,13 @@ export async function submitSurvey(input: SurveyInput): Promise<void> {
     else if (Array.isArray(v)) { const a = v.filter((x) => typeof x === 'string' && x.trim()); if (a.length) clean[k] = a }
   }
 
+  // Every question is mandatory — reject if any is left blank.
+  const missing = SURVEY_QUESTIONS.filter((q) => !isAnswered(q, clean)).map((q) => SURVEY_QUESTIONS.indexOf(q) + 1)
+  if (missing.length) throw new Error(`Sila jawab semua soalan. Belum dijawab: soalan ${missing.join(', ')}.`)
+
   await sql`
     insert into survey_responses (nama, emel, organisasi, jawatan, answers)
-    values (${nama}, ${emel}, ${organisasi},
-            ${(input.jawatan ?? '').trim() || null}, ${JSON.stringify(clean)}::jsonb)`
+    values (${nama}, ${emel}, ${organisasi}, ${jawatan}, ${JSON.stringify(clean)}::jsonb)`
 }
 
 async function requireSession() {
