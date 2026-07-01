@@ -216,6 +216,14 @@ export const IconUndo = (p: IconProps) => (
   </Svg>
 )
 
+// Feedback survey — message bubble with a check.
+export const IconFeedback = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    <path d="m9 10 2 2 4-4" />
+  </Svg>
+)
+
 // Hamburger menu — mobile nav toggle.
 export const IconMenu = (p: IconProps) => (
   <Svg {...p}>

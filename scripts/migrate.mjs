@@ -45,6 +45,7 @@ async function main() {
   await runFile('Trip status', join(__dirname, '../db/migrations/0008_trip_status.sql'))
   await runFile('Transport group', join(__dirname, '../db/migrations/0009_transport_group.sql'))
   await runFile('Drop redundant shirt_size', join(__dirname, '../db/migrations/0010_shirt_size.sql'))
+  await runFile('Survey', join(__dirname, '../db/migrations/0011_survey.sql'))
 
   const [{ count }] = await sql`select count(*)::int as count from guests`
   if (count > 0) console.log(`\nSeed skipped — guests already has ${count} rows.`)

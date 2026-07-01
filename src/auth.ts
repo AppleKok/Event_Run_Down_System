@@ -40,7 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     authorized({ auth: session, request: { nextUrl } }) {
       const path = nextUrl.pathname
-      if (path.startsWith('/login') || path.startsWith('/api/auth')) return true
+      // /survey is the public QR feedback form — open to everyone (incl. its submit action).
+      if (path.startsWith('/login') || path.startsWith('/api/auth') || path.startsWith('/survey')) return true
       return !!session?.user
     },
     jwt({ token, user }) {

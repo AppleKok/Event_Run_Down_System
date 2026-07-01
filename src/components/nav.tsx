@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import {
   IconOverview, IconGuests, IconCommittee, IconAttendance, IconRooms, IconTransport, IconRundown, IconTasks,
-  IconSignOut, IconMenu, IconClose,
+  IconFeedback, IconSignOut, IconMenu, IconClose,
 } from './icons'
 
 const items = [
@@ -17,6 +17,7 @@ const items = [
   { href: '/transport', label: 'Transport', icon: IconTransport },
   { href: '/rundown', label: 'Run-Down', icon: IconRundown },
   { href: '/tasks', label: 'Tasks', icon: IconTasks },
+  { href: '/feedback', label: 'Feedback', icon: IconFeedback },
 ]
 
 function Brand() {
