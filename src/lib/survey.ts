@@ -13,13 +13,43 @@ export interface SurveyQuestion {
   hint?: string
 }
 
-// Section A — participant details (all free text).
-export const PARTICIPANT_FIELDS = [
-  { id: 'nama', label: 'Nama', required: true },
-  { id: 'emel', label: 'Emel', required: true, type: 'email' },
-  { id: 'organisasi', label: 'Nama PBT / Organisasi', required: true },
-  { id: 'jawatan', label: 'Jawatan / Jabatan', required: false },
+// PBT / organisasi choices for the dropdown (deduped; obvious typos normalised).
+// "Lain-lain" lets participants enter anything not listed.
+export const PBT_OPTIONS = [
+  'Majlis Bandaraya Alor Setar',
+  'Majlis Daerah Baling',
+  'Majlis Daerah Bandar Baharu',
+  'Majlis Daerah Pendang',
+  'Majlis Daerah Yan',
+  'Majlis Daerah Padang Terap',
+  'Majlis Perbandaran Kubang Pasu',
+  'Majlis Perbandaran Kulim',
+  'Majlis Perbandaran Sungai Petani',
+  'Majlis Perbandaran Langkawi Bandar Pelancongan',
+  'PBT Taman Perindustrian Hi-Tech',
+  'SUK Kedah',
 ] as const
+export const PBT_OTHER = 'Lain-lain'
+
+// Basic email shape check — shared by the form and the server action.
+export function isValidEmail(v: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+}
+
+// Section A — participant details.
+export interface ParticipantField {
+  id: string
+  label: string
+  required: boolean
+  type: 'text' | 'email' | 'select'
+  options?: readonly string[]
+}
+export const PARTICIPANT_FIELDS: ParticipantField[] = [
+  { id: 'nama', label: 'Nama (nama penuh seperti dalam IC)', required: true, type: 'text' },
+  { id: 'emel', label: 'Emel', required: true, type: 'email' },
+  { id: 'organisasi', label: 'Nama PBT / Organisasi', required: true, type: 'select', options: PBT_OPTIONS },
+  { id: 'jawatan', label: 'Jawatan / Jabatan', required: false, type: 'text' },
+]
 
 // Section B — session feedback.
 export const SURVEY_QUESTIONS: SurveyQuestion[] = [

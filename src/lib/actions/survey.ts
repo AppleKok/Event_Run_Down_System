@@ -1,7 +1,7 @@
 'use server'
 import { sql } from '@/lib/db'
 import { auth } from '@/auth'
-import type { SurveyInput, SurveyAnswers } from '@/lib/survey'
+import { isValidEmail, type SurveyInput, type SurveyAnswers } from '@/lib/survey'
 
 export interface SurveyResponseRow {
   id: string
@@ -18,7 +18,11 @@ export interface SurveyResponseRow {
 export async function submitSurvey(input: SurveyInput): Promise<void> {
   const nama = (input?.nama ?? '').trim()
   const emel = (input?.emel ?? '').trim()
+  const organisasi = (input?.organisasi ?? '').trim()
   if (!nama) throw new Error('Sila isi nama anda.')
+  if (!emel) throw new Error('Sila isi emel anda.')
+  if (!isValidEmail(emel)) throw new Error('Format emel tidak sah.')
+  if (!organisasi) throw new Error('Sila pilih PBT / Organisasi anda.')
 
   // Only persist the two answer shapes we expect (string | string[] of strings).
   const clean: SurveyAnswers = {}
@@ -29,7 +33,7 @@ export async function submitSurvey(input: SurveyInput): Promise<void> {
 
   await sql`
     insert into survey_responses (nama, emel, organisasi, jawatan, answers)
-    values (${nama}, ${emel || null}, ${(input.organisasi ?? '').trim() || null},
+    values (${nama}, ${emel}, ${organisasi},
             ${(input.jawatan ?? '').trim() || null}, ${JSON.stringify(clean)}::jsonb)`
 }
 

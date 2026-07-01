@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { submitSurvey } from '@/lib/actions/survey'
 import {
-  SURVEY_TITLE, SURVEY_SUBTITLE, PARTICIPANT_FIELDS, SURVEY_QUESTIONS,
+  SURVEY_TITLE, SURVEY_SUBTITLE, PARTICIPANT_FIELDS, SURVEY_QUESTIONS, PBT_OTHER, isValidEmail,
   type SurveyAnswers,
 } from '@/lib/survey'
 
@@ -15,6 +15,7 @@ export default function SurveyPage() {
   const [others, setOthers] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [emailError, setEmailError] = useState('')
   const [done, setDone] = useState(false)
 
   function setSingle(qid: string, value: string) {
@@ -31,6 +32,20 @@ export default function SurveyPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Email must be present and valid before we submit.
+    const emel = (participant.emel ?? '').trim()
+    if (!emel || !isValidEmail(emel)) {
+      setEmailError(!emel ? 'Sila isi emel anda.' : 'Format emel tidak sah (cth: nama@pbt.gov.my).')
+      return
+    }
+    setEmailError('')
+
+    // If PBT is "Lain-lain", use the typed value as the organisation.
+    const organisasi = participant.organisasi === PBT_OTHER
+      ? (participant.organisasi_other ?? '').trim()
+      : (participant.organisasi ?? '')
+
     setBusy(true)
     try {
       // Fold "Lain-lain" free text into <qid>_other for questions that have it.
@@ -40,8 +55,8 @@ export default function SurveyPage() {
       }
       await submitSurvey({
         nama: participant.nama ?? '',
-        emel: participant.emel ?? '',
-        organisasi: participant.organisasi ?? '',
+        emel,
+        organisasi,
         jawatan: participant.jawatan ?? '',
         answers: merged,
       })
@@ -88,13 +103,50 @@ export default function SurveyPage() {
                 <span className="block text-sm font-medium text-slate-700 mb-1.5">
                   {f.label}{f.required && <span className="text-red-500"> *</span>}
                 </span>
-                <input
-                  type={'type' in f && f.type === 'email' ? 'email' : 'text'}
-                  required={f.required}
-                  value={participant[f.id] ?? ''}
-                  onChange={(e) => setParticipant((p) => ({ ...p, [f.id]: e.target.value }))}
-                  className={input}
-                />
+
+                {f.type === 'select' ? (
+                  <>
+                    <select
+                      required={f.required}
+                      value={participant[f.id] ?? ''}
+                      onChange={(e) => setParticipant((p) => ({ ...p, [f.id]: e.target.value }))}
+                      className={`${input} ${participant[f.id] ? '' : 'text-slate-400'}`}
+                    >
+                      <option value="" disabled>— Pilih PBT / Organisasi —</option>
+                      {f.options?.map((o) => <option key={o} value={o} className="text-slate-900">{o}</option>)}
+                      <option value={PBT_OTHER} className="text-slate-900">{PBT_OTHER} (nyatakan)</option>
+                    </select>
+                    {participant[f.id] === PBT_OTHER && (
+                      <input
+                        type="text"
+                        required
+                        value={participant.organisasi_other ?? ''}
+                        onChange={(e) => setParticipant((p) => ({ ...p, organisasi_other: e.target.value }))}
+                        placeholder="Nyatakan nama PBT / Organisasi"
+                        className={`${input} mt-2`}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <input
+                    type={f.type === 'email' ? 'email' : 'text'}
+                    required={f.required}
+                    value={participant[f.id] ?? ''}
+                    onChange={(e) => {
+                      setParticipant((p) => ({ ...p, [f.id]: e.target.value }))
+                      if (f.id === 'emel' && emailError) setEmailError('')
+                    }}
+                    onBlur={(e) => {
+                      if (f.id === 'emel') {
+                        const v = e.target.value.trim()
+                        setEmailError(v && !isValidEmail(v) ? 'Format emel tidak sah (cth: nama@pbt.gov.my).' : '')
+                      }
+                    }}
+                    aria-invalid={f.id === 'emel' && !!emailError}
+                    className={`${input} ${f.id === 'emel' && emailError ? 'border-red-400 focus:ring-red-500/40 focus:border-red-400' : ''}`}
+                  />
+                )}
+                {f.id === 'emel' && emailError && <span className="block text-xs text-red-600 mt-1">{emailError}</span>}
               </label>
             ))}
           </div>
