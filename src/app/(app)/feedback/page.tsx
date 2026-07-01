@@ -24,6 +24,7 @@ export default function FeedbackPage() {
   const [surveyUrl, setSurveyUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [tab, setTab] = useState<'summary' | 'responses'>('summary')
+  const [pdfBusy, setPdfBusy] = useState(false)
 
   // Read the browser origin once after mount (server has no window). Both server and
   // client-hydration render '' first, then this updates — so no hydration mismatch.
@@ -67,13 +68,100 @@ export default function FeedbackPage() {
     )
   }
 
+  // Build a tabular PDF report: participant list + per-question response summary.
+  // jsPDF is loaded lazily (browser-only, keeps it out of the initial bundle).
+  async function downloadPdf() {
+    if (rows.length === 0) return
+    setPdfBusy(true)
+    try {
+      const { jsPDF } = await import('jspdf')
+      const autoTable = (await import('jspdf-autotable')).default
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+      const M = 40
+      const pageW = doc.internal.pageSize.getWidth()
+      const pageH = doc.internal.pageSize.getHeight()
+      const contentW = pageW - M * 2
+      const finalY = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY
+
+      // Header
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20)
+      doc.text(SURVEY_TITLE, M, 46)
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90)
+      doc.text(SURVEY_SUBTITLE, M, 62)
+      const now = new Date().toLocaleString('en-GB')
+      doc.text(`Dijana: ${now}    |    Jumlah maklum balas: ${rows.length}`, M, 78)
+      doc.setTextColor(20)
+
+      // A — participants
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
+      doc.text('A. Senarai Peserta', M, 98)
+      autoTable(doc, {
+        startY: 106,
+        head: [['#', 'Nama', 'Emel', 'PBT / Organisasi', 'Jawatan', 'Dihantar']],
+        body: rows.map((r, i) => [String(i + 1), r.nama ?? '—', r.emel ?? '—', r.organisasi ?? '—', r.jawatan ?? '—', r.submitted_at]),
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+        headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+        columnStyles: { 0: { cellWidth: 20 }, 5: { cellWidth: 66 } },
+        margin: { left: M, right: M },
+      })
+
+      // B — per-question summary
+      let y = finalY() + 26
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
+      if (y > pageH - 80) { doc.addPage(); y = 48 }
+      doc.text('B. Ringkasan Maklum Balas', M, y); y += 12
+
+      SURVEY_QUESTIONS.forEach((q, idx) => {
+        const s = summary[idx]
+        if (y > pageH - 120) { doc.addPage(); y = 48 }
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(20)
+        const lines = doc.splitTextToSize(`${idx + 1}. ${q.label}`, contentW)
+        doc.text(lines, M, y)
+        y += lines.length * 12 + 4
+        autoTable(doc, {
+          startY: y,
+          head: [['Pilihan', 'Bilangan', '%']],
+          body: q.options.map((o) => {
+            const c = s.counts[o]
+            const pct = rows.length ? Math.round((c / rows.length) * 100) : 0
+            return [o, String(c), `${pct}%`]
+          }),
+          styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+          headStyles: { fillColor: [226, 232, 240], textColor: 30 },
+          columnStyles: { 1: { cellWidth: 60, halign: 'center' }, 2: { cellWidth: 46, halign: 'center' } },
+          margin: { left: M, right: M },
+        })
+        y = finalY() + 6
+        if (s.others.length) {
+          const otxt = doc.splitTextToSize(`Lain-lain: ${s.others.join('; ')}`, contentW)
+          if (y + otxt.length * 11 > pageH - 40) { doc.addPage(); y = 48 }
+          doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(90)
+          doc.text(otxt, M, y); y += otxt.length * 11 + 4
+          doc.setTextColor(20)
+        }
+        y += 16
+      })
+
+      doc.save(`survey-report-${new Date().toISOString().slice(0, 10)}.pdf`)
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   return (
     <div>
       <div className="print:hidden">
         <PageHeader
           title="Feedback Survey"
           subtitle="Borang maklum balas awam — imbas QR untuk mengisi"
-          actions={<button onClick={exportCsv} className={btnSecondary}><IconDownload className="w-4 h-4" /> CSV</button>}
+          actions={
+            <>
+              <button onClick={downloadPdf} disabled={pdfBusy || rows.length === 0} className={btnSecondary}>
+                <IconDownload className="w-4 h-4" /> {pdfBusy ? 'PDF…' : 'PDF'}
+              </button>
+              <button onClick={exportCsv} className={btnSecondary}><IconDownload className="w-4 h-4" /> CSV</button>
+            </>
+          }
         />
 
         {/* Share / QR card */}
